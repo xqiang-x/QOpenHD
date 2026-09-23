@@ -776,6 +776,11 @@ bool QOpenHD::is_platform_rock()
 #ifdef IS_PLATFORM_ROCK
     return true;
 #else
+#if defined(__android__)
+    // Android 无 sysutils socket / DRM 基础设施，且本函数所有调用点都在
+    // "#if defined(__linux__) && !defined(__android__)" 分支内，这里直接返回 false。
+    return false;
+#else
     const auto is_rock_platform = [](int type) {
         return type >= X_PLATFORM_TYPE_ROCKCHIP_RK3566_RADXA_ZERO3W &&
                type < X_PLATFORM_TYPE_ALWINNER_X20;
@@ -793,6 +798,7 @@ bool QOpenHD::is_platform_rock()
         return true;
     }
     return false;
+#endif
 #endif
 }
 

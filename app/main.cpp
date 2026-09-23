@@ -18,6 +18,7 @@
 #include "telemetry/models/aohdsystem.h"
 #include "telemetry/models/wificard.h"
 #include "telemetry/MavlinkTelemetry.h"
+#include "rtc/RtcClient.h"
 #include "telemetry/models/rcchannelsmodel.h"
 #include "telemetry/models/markermodel.h"
 #include "telemetry/settings/mavlinksettingsmodel.h"
@@ -504,6 +505,8 @@ int main(int argc, char *argv[]) {
     qDebug() << "QML loaded";
     // Now we start mavlink for the first time
     MavlinkTelemetry::instance().start();
+    // RTC 直连 SFU（若设置启用）：视频/遥测/上行命令走 tj_rtc Subscriber
+    RtcClient::instance().start_if_enabled();
 
     QRenderStats::instance().register_to_root_window(engine);
     //debug_kms();
@@ -511,6 +514,7 @@ int main(int argc, char *argv[]) {
     const int retval = app.exec();
     // Terminating needs a bit of special care due to the singleton usage and threads
     qDebug()<<"Terminating";
+    RtcClient::instance().stop();
     MavlinkTelemetry::instance().terminate();
     platform_audio_terminate();
     return retval;

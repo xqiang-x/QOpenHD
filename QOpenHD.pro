@@ -116,6 +116,9 @@ include(app/telemetry/telemetry.pri)
 # This code is platform and library independent, and always compiled.
 include(app/videostreaming/vscommon/vscommon.pri)
 
+# RTC direct link (tj_rtc SDK subscriber): phone connects directly to the SFU
+include(app/rtc/rtc.pri)
+
 # Video is quite platform dependent, if you have compile issues, try compiling without any videostreaming enabled first ;)
 LinuxBuild {
     # Avcodec decode and display, all sources

@@ -8,6 +8,7 @@
 #include "lowlagdecoder.h"
 #include "../gstreamer/gstrtpreceiver.h"
 #include "../vscommon/QOpenHDVideoHelper.hpp"
+#include "../../rtc/RtcReceiver.h"
 
 class QSurfaceTexture;
 class QAndroidMediaPlayer : public QObject
@@ -35,7 +36,9 @@ private:
 private:
     bool m_primaryVideoEnabled = true;
     std::unique_ptr<LowLagDecoder> m_low_lag_decoder=nullptr;
+    // RTC 直连模式下使用 m_rtc_receiver，否则用 m_receiver（二选一，见 setup_start_video_decoder_display）
     std::unique_ptr<GstRtpReceiver> m_receiver=nullptr;
+    std::unique_ptr<RtcReceiver> m_rtc_receiver=nullptr;
 };
 
 #endif // QANDROIDMEDIAPLAYER_H

@@ -85,6 +85,21 @@ bool MavlinkTelemetry::sendMessage(mavlink_message_t msg){
         // probably a programming error, the message was not packed with the right comp id
         qDebug()<<"WARN Sending message with comp id:"<<msg.compid<<" instead of"<<comp_id;
     }
+    // RTC 直连模式：优先走 ctrl 上行通道；未连接时回落原有 UDP/TCP 逻辑
+    {
+        std::function<bool(const uint8_t*, size_t)> rtc_sender;
+        {
+            std::lock_guard<std::mutex> lock(m_rtc_upstream_sender_mutex);
+            rtc_sender = m_rtc_upstream_sender;
+        }
+        if (rtc_sender) {
+            uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+            const uint16_t buffer_len = mavlink_msg_to_send_buffer(buffer, &msg);
+            if (rtc_sender(buffer, buffer_len)) {
+                return true;
+            }
+        }
+    }
     // Prefer udp
     if(m_udp_connection->threadsafe_is_alive()){
         m_udp_connection->send_message(msg);
@@ -106,6 +121,24 @@ bool MavlinkTelemetry::sendMessage(mavlink_message_t msg){
 
 static int get_message_size(const mavlink_message_t& msg){
     return sizeof(msg);
+}
+
+void MavlinkTelemetry::feed_rtc_bytes(const uint8_t* data, size_t len)
+{
+    // 与 UDPConnection::process_data 相同的解析循环，仅 mavlink 通道号不同
+    mavlink_message_t msg;
+    for (size_t i = 0; i < len; i++) {
+        const uint8_t res = mavlink_parse_char(RTC_MAV_CHANNEL, data[i], &msg, &m_rtc_mavlink_status);
+        if (res) {
+            process_mavlink_message(msg);
+        }
+    }
+}
+
+void MavlinkTelemetry::set_rtc_upstream_sender(std::function<bool(const uint8_t*, size_t)> sender)
+{
+    std::lock_guard<std::mutex> lock(m_rtc_upstream_sender_mutex);
+    m_rtc_upstream_sender = std::move(sender);
 }
 
 void MavlinkTelemetry::process_mavlink_message(const mavlink_message_t& msg)

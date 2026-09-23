@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QtQuick>
 #include <chrono>
+#include <functional>
 #include <mutex>
 #include <thread>
 
@@ -48,6 +49,17 @@ public:
      * @return true on success (this does not mean the message was received, but rather the message was sent out via the lossy connection)
      */
     bool sendMessage(mavlink_message_t msg);
+    /**
+     * RTC 直连（tj_rtc Subscriber ctrl 通道）相关：
+     * 注入 ctrl 通道收到的原始字节（MAVLink 帧流），单独使用 mavlink 通道索引 4 解析，
+     * 与 UDP/TCP 路径（通道 0-3）互不干扰。
+     */
+    void feed_rtc_bytes(const uint8_t* data, size_t len);
+    /**
+     * 设置 RTC ctrl 上行发送器：sendMessage 优先尝试它；
+     * 返回 false（RTC 未启用/未连接）时回落原有 UDP/TCP 逻辑。
+     */
+    void set_rtc_upstream_sender(std::function<bool(const uint8_t* data, size_t len)> sender);
     struct FCMavId{
         int comp_id;
         int sys_id;
@@ -87,6 +99,12 @@ private:
     std::unique_ptr<TCPConnection> m_tcp_connection_wifi_hs=nullptr;
     std::unique_ptr<TCPConnection> m_tcp_connection_eth_hs=nullptr;
     std::unique_ptr<TCPConnection> m_tcp_connection_custom=nullptr;
+
+    // RTC ctrl 通道（MAVLINK_COMM_4 未定义枚举值，但 MAVLINK_COMM_NUM_BUFFERS=16，索引 4 有效）
+    static constexpr int RTC_MAV_CHANNEL = 4;
+    mavlink_status_t m_rtc_mavlink_status{};
+    std::mutex m_rtc_upstream_sender_mutex;
+    std::function<bool(const uint8_t* data, size_t len)> m_rtc_upstream_sender;
 
     int64_t m_last_timesync_out_us=0;
     bool m_fc_found=false;

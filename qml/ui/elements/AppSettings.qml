@@ -80,6 +80,15 @@ Settings {
     property int secondary_video_minimized_height : 240
     property int secondary_video_maximize_factor_perc : 200
 
+    // RTC direct link (tj_rtc): connect this QOpenHD directly to the SFU instead of the OpenHD ground station
+    // All of these require an app restart to take effect (read once on startup by app/rtc/RtcClient.cpp)
+    property bool qopenhd_rtc_enabled: false
+    property string qopenhd_rtc_server: "106.15.177.248"
+    property int qopenhd_rtc_server_port: 9200
+    property bool qopenhd_rtc_use_udp: true
+    property string qopenhd_rtc_stream_id: "openhd0"
+    property string qopenhd_rtc_user_id: "qopenhd"
+
     // ----------------------------------------------------------------------------------
     // All video (streaming) related settings local to qopenhd (nothing to do with openhd) end
     // ----------------------------------------------------------------------------------

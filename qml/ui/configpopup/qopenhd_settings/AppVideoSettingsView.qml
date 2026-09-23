@@ -87,6 +87,108 @@ ScrollView {
                 }
 
 
+            // RTC direct link (tj_rtc): QOpenHD connects directly to the RTC SFU,
+            // no OpenHD ground station in between. All settings require an app restart.
+            SettingsCategory{
+                m_description: "RTC Direct Link (tj_rtc SFU)"
+
+                SettingBaseElement{
+                    m_short_description: "Enable RTC direct link"
+                    m_long_description: "Receive video + telemetry and send upstream commands directly via the RTC SFU instead of the OpenHD ground station. Requires restart."
+                    Switch {
+                        width: 32
+                        height: elementHeight
+                        anchors.rightMargin: Qt.inputMethod.visible ? 96 : 36
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        checked: settings.qopenhd_rtc_enabled
+                        onCheckedChanged: {
+                            const actually_changed = settings.qopenhd_rtc_enabled !== checked
+                            settings.qopenhd_rtc_enabled = checked
+                            if (actually_changed) {
+                                _restartqopenhdmessagebox.show()
+                            }
+                        }
+                    }
+                }
+                SettingBaseElement{
+                    m_short_description: "SFU server"
+                    TextField {
+                        width: 210
+                        height: elementHeight
+                        font.pixelSize: 14
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.rightMargin: Qt.inputMethod.visible ? 78 : 18
+                        validator: RegExpValidator{
+                            regExp: /^((?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\.){0,3}(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])$/
+                        }
+                        inputMethodHints: Qt.ImhFormattedNumbersOnly
+                        text: settings.qopenhd_rtc_server
+                        placeholderText: qsTr("106.15.177.248")
+                        onTextEdited: settings.qopenhd_rtc_server = text
+                    }
+                }
+                SettingBaseElement{
+                    m_short_description: "SFU server port"
+                    SpinBox {
+                        height: elementHeight
+                        width: 210
+                        font.pixelSize: 14
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        from: 1
+                        to: 65535
+                        stepSize: 1
+                        editable: true
+                        anchors.rightMargin: Qt.inputMethod.visible ? 78 : 18
+                        value: settings.qopenhd_rtc_server_port
+                        onValueChanged: settings.qopenhd_rtc_server_port = value
+                    }
+                }
+                SettingBaseElement{
+                    m_short_description: "RTC use UDP"
+                    m_long_description: "Receive the media stream via UDP (server port + 1) with FEC/NACK. Recommended."
+                    Switch {
+                        width: 32
+                        height: elementHeight
+                        anchors.rightMargin: Qt.inputMethod.visible ? 96 : 36
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        checked: settings.qopenhd_rtc_use_udp
+                        onCheckedChanged: settings.qopenhd_rtc_use_udp = checked
+                    }
+                }
+                SettingBaseElement{
+                    m_short_description: "RTC stream id"
+                    TextField {
+                        width: 210
+                        height: elementHeight
+                        font.pixelSize: 14
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.rightMargin: Qt.inputMethod.visible ? 78 : 18
+                        text: settings.qopenhd_rtc_stream_id
+                        placeholderText: qsTr("openhd0")
+                        onTextEdited: settings.qopenhd_rtc_stream_id = text
+                    }
+                }
+                SettingBaseElement{
+                    m_short_description: "RTC client user id"
+                    TextField {
+                        width: 210
+                        height: elementHeight
+                        font.pixelSize: 14
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.rightMargin: Qt.inputMethod.visible ? 78 : 18
+                        text: settings.qopenhd_rtc_user_id
+                        placeholderText: qsTr("qopenhd")
+                        onTextEdited: settings.qopenhd_rtc_user_id = text
+                    }
+                }
+            }
+
             SettingsCategory{
                 m_description: "Advanced Settings"
                 m_hide_elements: true
